@@ -3,14 +3,6 @@
 // found in the LICENSE file.
 
 
-if(typeof(String.prototype.trim) === "undefined")
-{
-    String.prototype.trim = function() 
-    {
-        return String(this).replace(/^\s+|\s+$/g, '');
-    };
-}//this adds a trim function to any string to remove white space - this changes
- //what it means to be a string, but only for strings that come after this function
 
 function renderStatus(statusText) {
   document.getElementById('status').textContent += statusText;
@@ -22,9 +14,15 @@ function summarizeAccounts(results) {
     var categories=results[0]
     for(index=0;index<categories.length;index++){
 		var categoryname = categories[index][0]
-		var categoryamount = categories[index][1].trim()//because java script is magic?
+		var categoryamount = categories[index][1]
 		var negative = categoryamount[0]=='-'
-		categoryamount = categoryamount.replace(/[-,$.]/g, '');
+		categoryamount = categoryamount.replace('-', '');//removes -
+		categoryamount = categoryamount.replace('$', '');//removes $
+		categoryamount = categoryamount.replace('.', '');//removes .
+		categoryamount = categoryamount.replace(',', '');//removes ,
+		categoryamount = categoryamount.replace(' ', '');//removes space
+		categoryamount = categoryamount.replace('\n', '');//removes return
+		categoryamount = categoryamount.replace('\t', '');//removes tab
 		categoryamount = Number(categoryamount)
 		if(negative){
 		categoryamount = -categoryamount
