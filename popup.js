@@ -4,54 +4,73 @@
 
 
 
-function renderStatus(statusText) {
-  document.getElementById('status').textContent += statusText;
+function writeTextToPopup(textToBeWritten) {
+  document.getElementById('status').textContent += textToBeWritten;
 }
+
+
 function summarizeAccounts(results) {
     var spending=0
     var billing=0
     var savings=0
-    var categories=results[0]
-    for(index=0;index<categories.length;index++){
-		var categoryname = categories[index][0]
-		var categoryamount = categories[index][1]
-		var negative = categoryamount[0]=='-'
-		categoryamount = categoryamount.replace('-', '');//removes -
-		categoryamount = categoryamount.replace('$', '');//removes $
-		categoryamount = categoryamount.replace('.', '');//removes .
-		categoryamount = categoryamount.replace(',', '');//removes ,
-		categoryamount = categoryamount.replace(' ', '');//removes space
-		categoryamount = categoryamount.replace('\n', '');//removes return
-		categoryamount = categoryamount.replace('\t', '');//removes tab
-		categoryamount = Number(categoryamount)
-		if(negative){
-		categoryamount = -categoryamount
+
+    var rows=results[0]
+
+    for(index=0;index<rows.length;index++){
+		var row = rows[index] // get the current row
+		
+		var name = row[0] // extract the name from the row
+		var amount = row[1] // extract amount from the row
+		var checked = row[2] // if the row is checked
+
+		
+		if(checked == 1){ // if the row is checked, 
+			continue      // we skip the rest of the loop and continue with the next row.
+			            
 		}
-		if(categoryname.includes('Spending')){
-			spending = spending + categoryamount
+		
+		// remove all unwanted characters
+	    amount = amount.replace('$', ''); // removes $
+		amount = amount.replace('.', ''); // removes .
+		amount = amount.replace(',', ''); // removes ,
+		amount = amount.replace(' ', ''); // removes space
+		amount = amount.replace('\n', ''); // removes return
+		amount = amount.replace('\t', ''); // removes tab
+		
+		amount = Number(amount) // turns amount from string to number
+		
+		// determine which category amount should be added to
+		//this loop will run once for every row
+		if(name.includes('Spending')){
+			spending = spending + amount
 		}
-		else if (categoryname.includes('Savings')){
-			savings = savings + categoryamount
+		else if (name.includes('Savings')){
+			savings = savings + amount
 		}
 		else{
-			billing = billing + categoryamount
+			billing = billing + amount // anything not marked as savings or spending
+			                           // goes to billing
 		}
-    } //this loop will run once for every category row
-	renderStatus(' spending '+(spending/100))
-	renderStatus(' savings '+(savings/100))
-	renderStatus(' billing '+(billing/100))
+    } 
+
+    // these amounts get put into the popup
+	writeTextToPopup(' spending '+(spending/100))
+	writeTextToPopup(' savings '+(savings/100))
+	writeTextToPopup(' billing '+(billing/100))
 }
 
-function testing() {
-    return 5;
-}
+// this code give us access to the YNAB page
+// first line gives me the name of the row
+// second line gives me the amount
+// third line tells me if it's checked or not
 document.addEventListener('DOMContentLoaded', function() {
-    renderStatus("Erin Rocks")
+    writeTextToPopup("Erin Rocks")
   chrome.tabs.executeScript({
     code: 'Array.from(document.getElementsByClassName("is-sub-category")).map(function(row) {\
 return[\
 row.getElementsByClassName("budget-table-cell-name")[0].innerText,\
-row.getElementsByClassName("budget-table-cell-available")[0].innerText\
+row.getElementsByClassName("budget-table-cell-available")[0].innerText,\
+row.getElementsByClassName("is-checked").length\
 ]})'
   }, summarizeAccounts );
   
